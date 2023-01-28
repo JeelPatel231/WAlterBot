@@ -1,0 +1,11 @@
+# all database files
+*.db
+
+# my build output directory
+build/
+
+# android toolchain for compiling for android aarch64
+ndk
+
+# my build script, nothing much
+build.sh
