@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -38,9 +37,8 @@ func (mycli *MyClient) myEventHandler(evt interface{}) {
 	// Handle event and access mycli.WAClient
 	switch v := evt.(type) {
 	case *events.Message:
-		userNum := strings.Split(v.Info.Sender.String(), "@")[0]
-		exists := utils.Contains(allowedUsers, userNum)
-		if v.Info.IsFromMe || exists {
+		isAllowed := utils.Contains(allowedUsers, v.Info.Sender.User)
+		if v.Info.IsFromMe || isAllowed {
 			modules.CallbackExecutor(mycli.WAClient, v)
 		}
 	}
