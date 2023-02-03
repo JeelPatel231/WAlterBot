@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"context"
 	"fmt"
 	"gowa/utils"
 	"strings"
@@ -11,7 +12,7 @@ import (
 
 type Command struct {
 	command  string
-	callback func(client *whatsmeow.Client, message *events.Message)
+	callback func(client *whatsmeow.Client, message *events.Message) error
 	help     string
 }
 
@@ -43,13 +44,22 @@ func CallbackExecutor(client *whatsmeow.Client, message *events.Message) {
 
 	// or find the callback and execute it from the list of registered commands
 	for i := range commandArray {
-		fmt.Println(commandArray[i].command, cmd_string[0])
+		// fmt.Println(commandArray[i], cmd_string[0])
 		if commandArray[i].command == cmd_string[0] {
 			fmt.Println()
 			fmt.Println("Command Captured :", commandArray[i].command)
 			fmt.Println("on message:", message.Message.String())
 			fmt.Println()
-			go commandArray[i].callback(client, message)
+			go func() {
+				fmt.Println(commandArray[i])
+				err := commandArray[i].callback(client, message)
+				if err != nil {
+					client.SendMessage(context.Background(), message.Info.Chat,
+						utils.NewMessage(err.Error(), message),
+					)
+				}
+			}()
+			break
 		}
 	}
 

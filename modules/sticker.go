@@ -3,7 +3,7 @@ package modules
 import (
 	"bytes"
 	"context"
-	"gowa/utils"
+	"errors"
 	"image"
 	"image/jpeg"
 	"image/png"
@@ -33,50 +33,32 @@ func getDecoder(mimeType *string) func(r io.Reader) (image.Image, error) {
 	return nil
 }
 
-func sticker_callback(cli *whatsmeow.Client, msg *events.Message) {
+func sticker_callback(cli *whatsmeow.Client, msg *events.Message) error {
 	if msg.Message.ExtendedTextMessage == nil || msg.Message.ExtendedTextMessage.ContextInfo.QuotedMessage.ImageMessage == nil {
-		cli.SendMessage(context.Background(), msg.Info.Chat,
-			utils.NewMessage("Reply to a message with photo dipshit!", msg),
-		)
-		return
+		return errors.New("Reply to a message with photo! QuotedMessage / Image was nil.")
 	}
 
 	downloaded_image, err := cli.Download(msg.Message.ExtendedTextMessage.ContextInfo.QuotedMessage.ImageMessage)
 
 	if err != nil {
-		cli.SendMessage(context.Background(), msg.Info.Chat,
-			utils.NewMessage("Failed to download photo!", msg),
-		)
-		return
+		return errors.New("Failed to download photo!")
 	}
 	decoder := getDecoder(msg.Message.ExtendedTextMessage.ContextInfo.QuotedMessage.ImageMessage.Mimetype)
 	if decoder == nil {
-		cli.SendMessage(context.Background(), msg.Info.Chat,
-			utils.NewMessage("Invalid MimeType!", msg),
-		)
-		return
+		return errors.New("Invalid MimeType")
 	}
 	img, err := decoder(bytes.NewReader(downloaded_image))
 	if err != nil {
-		cli.SendMessage(context.Background(), msg.Info.Chat,
-			utils.NewMessage("Failed to decode photo!", msg),
-		)
-		return
+		return errors.New("Failed to decode photo!")
 	}
 	webpByte, err := webp.EncodeRGBA(img, *proto.Float32(1))
 	if err != nil {
-		cli.SendMessage(context.Background(), msg.Info.Chat,
-			utils.NewMessage("Failed to encode sticker!", msg),
-		)
-		return
+		return errors.New("Failed to encode sticker!")
 	}
 
 	uploadImage, err := cli.Upload(context.Background(), webpByte, whatsmeow.MediaImage)
 	if err != nil {
-		cli.SendMessage(context.Background(), msg.Info.Chat,
-			utils.NewMessage("Failed to upload sticker!", msg),
-		)
-		return
+		return errors.New("Failed to upload sticker!")
 	}
 
 	// Showed frame with thumbnail
@@ -96,6 +78,8 @@ func sticker_callback(cli *whatsmeow.Client, msg *events.Message) {
 	}
 
 	cli.SendMessage(context.Background(), msg.Info.Chat, result)
+
+	return nil
 }
 
 var Sticker Command = Command{

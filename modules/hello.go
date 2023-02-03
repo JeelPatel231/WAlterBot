@@ -10,12 +10,13 @@ import (
 
 const hello_help string = "Check if Bot is alive or dead."
 
-func hello_callback(cli *whatsmeow.Client, msg *events.Message) {
-	cli.SendMessage(
+func hello_callback(cli *whatsmeow.Client, msg *events.Message) error {
+	_, err := cli.SendMessage(
 		context.Background(),
 		msg.Info.Chat,
 		utils.NewMessage("Hello World", msg),
 	)
+	return err
 }
 
 var Hello Command = Command{

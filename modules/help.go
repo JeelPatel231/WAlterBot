@@ -2,7 +2,7 @@ package modules
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"gowa/utils"
 	"strings"
 
@@ -12,32 +12,27 @@ import (
 
 const help_help string = "show help for modules, if defined."
 
-func help_callback(cli *whatsmeow.Client, msg *events.Message) {
+func help_callback(cli *whatsmeow.Client, msg *events.Message) error {
 	text := utils.GetText(msg)
 	if text == nil {
-		fmt.Println("No text found????")
-		return
+		return errors.New("No text found???")
 	}
 
 	stringArr := strings.Fields(*text)
 
 	if len(stringArr) != 2 {
-		fmt.Println("malformed input")
-		fmt.Println(len(stringArr))
-		fmt.Println(stringArr)
-		return
+		return errors.New("Malformed input")
 	}
 
 	switch stringArr[1] {
 	case ".help":
 		{
-
-			cli.SendMessage(
+			_, err := cli.SendMessage(
 				context.Background(),
 				msg.Info.Chat,
 				utils.NewMessage(help_help, msg),
 			)
-			return
+			return err
 		}
 	case "all":
 		{
@@ -45,24 +40,26 @@ func help_callback(cli *whatsmeow.Client, msg *events.Message) {
 			for i := range commandArray {
 				help_str += "- " + commandArray[i].command + "\n"
 			}
-			cli.SendMessage(
+			_, err := cli.SendMessage(
 				context.Background(),
 				msg.Info.Chat,
 				utils.NewMessage(help_str, msg),
 			)
-			return
+			return err
 		}
 	}
 
 	for i := range commandArray {
 		if commandArray[i].command == stringArr[1] {
-			cli.SendMessage(
+			_, err := cli.SendMessage(
 				context.Background(),
 				msg.Info.Chat,
 				utils.NewMessage(commandArray[i].help, msg),
 			)
+			return err
 		}
 	}
+	return nil
 }
 
 var Help Command = Command{
