@@ -21,6 +21,7 @@ var commandArray = []Command{
 	Sticker,
 	Info,
 	Neofetch,
+	Ytdl,
 }
 
 func CallbackExecutor(client *whatsmeow.Client, message *events.Message) {
