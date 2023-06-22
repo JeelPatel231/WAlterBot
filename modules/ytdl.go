@@ -54,7 +54,7 @@ type VideoDataResponse struct {
 var ytdl_help string = "for downloading youtube videos/audio"
 
 // HELPER FUNCTIONS
-func last[T comparable](arr []T) T {
+func last[T any](arr []T) T {
 	return arr[len(arr)-1]
 }
 
