@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	"go.mau.fi/whatsmeow"
-	waProto "go.mau.fi/whatsmeow/binary/proto"
+	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types/events"
 	"google.golang.org/protobuf/proto"
 )
@@ -170,18 +170,18 @@ func audioDownload(cli *whatsmeow.Client, msg *events.Message, jsonResp *VideoDa
 	 */
 
 	// Compose WhatsApp Proto
-	content := &waProto.Message{
-		DocumentMessage: &waProto.DocumentMessage{
+	content := &waE2E.Message{
+		DocumentMessage: &waE2E.DocumentMessage{
 			FileName:   proto.String(jsonResp.Title + "." + last_el.Container),
-			Url:        proto.String(audioUploaded.URL),
+			URL:        proto.String(audioUploaded.URL),
 			DirectPath: proto.String(audioUploaded.DirectPath),
 			// Mimetype:   proto.String(strings.ReplaceAll(last_el.Type, "\"", "")),
 			Mimetype:      proto.String(http.DetectContentType(dataBytes)),
 			FileLength:    proto.Uint64(audioUploaded.FileLength),
-			FileSha256:    audioUploaded.FileSHA256,
-			FileEncSha256: audioUploaded.FileEncSHA256,
+			FileSHA256:    audioUploaded.FileSHA256,
+			FileEncSHA256: audioUploaded.FileEncSHA256,
 			MediaKey:      audioUploaded.MediaKey,
-			ContextInfo:   &waProto.ContextInfo{StanzaId: &msg.Info.ID, Participant: proto.String(msg.Info.MessageSource.Sender.String()), QuotedMessage: msg.Message},
+			ContextInfo:   &waE2E.ContextInfo{StanzaID: &msg.Info.ID, Participant: proto.String(msg.Info.MessageSource.Sender.String()), QuotedMessage: msg.Message},
 		},
 	}
 

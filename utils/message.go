@@ -3,22 +3,22 @@ package utils
 import (
 	"strings"
 
-	waProto "go.mau.fi/whatsmeow/binary/proto"
+	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types/events"
 	"google.golang.org/protobuf/proto"
 )
 
-func NewMessage(text string, replied *events.Message) *waProto.Message {
+func NewMessage(text string, replied *events.Message) *waE2E.Message {
 	trimmedText := strings.TrimSpace(text)
-	msg := &waProto.Message{
-		ExtendedTextMessage: &waProto.ExtendedTextMessage{
+	msg := &waE2E.Message{
+		ExtendedTextMessage: &waE2E.ExtendedTextMessage{
 			Text: &trimmedText,
 		},
 	}
 
 	if replied != nil {
-		msg.ExtendedTextMessage.ContextInfo = &waProto.ContextInfo{
-			StanzaId:      &replied.Info.ID,
+		msg.ExtendedTextMessage.ContextInfo = &waE2E.ContextInfo{
+			StanzaID:      &replied.Info.ID,
 			Participant:   proto.String(replied.Info.MessageSource.Sender.String()),
 			QuotedMessage: replied.Message,
 		}

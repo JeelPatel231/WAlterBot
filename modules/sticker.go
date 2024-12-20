@@ -12,7 +12,7 @@ import (
 
 	"github.com/chai2010/webp"
 	"go.mau.fi/whatsmeow"
-	waProto "go.mau.fi/whatsmeow/binary/proto"
+	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types/events"
 	"google.golang.org/protobuf/proto"
 )
@@ -62,18 +62,18 @@ func sticker_callback(cli *whatsmeow.Client, msg *events.Message) error {
 	}
 
 	// Showed frame with thumbnail
-	result := &waProto.Message{
-		StickerMessage: &waProto.StickerMessage{
-			Url:               proto.String(uploadImage.URL),
-			FileSha256:        uploadImage.FileSHA256,
-			FileEncSha256:     uploadImage.FileEncSHA256,
+	result := &waE2E.Message{
+		StickerMessage: &waE2E.StickerMessage{
+			URL:               proto.String(uploadImage.URL),
+			FileSHA256:        uploadImage.FileSHA256,
+			FileEncSHA256:     uploadImage.FileEncSHA256,
 			MediaKey:          uploadImage.MediaKey,
 			Mimetype:          proto.String(http.DetectContentType(webpByte)),
 			DirectPath:        proto.String(uploadImage.DirectPath),
 			FileLength:        proto.Uint64(uint64(len(webpByte))),
 			FirstFrameSidecar: webpByte,
 			PngThumbnail:      webpByte,
-			ContextInfo:       &waProto.ContextInfo{StanzaId: &msg.Info.ID, Participant: proto.String(msg.Info.MessageSource.Sender.String()), QuotedMessage: msg.Message},
+			ContextInfo:       &waE2E.ContextInfo{StanzaID: &msg.Info.ID, Participant: proto.String(msg.Info.MessageSource.Sender.String()), QuotedMessage: msg.Message},
 		},
 	}
 
