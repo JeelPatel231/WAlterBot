@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -19,12 +20,15 @@ import (
 )
 
 type MyClient struct {
-	WAClient       *whatsmeow.Client
-	eventHandlerID uint32
+	WAClient *whatsmeow.Client
 }
 
-func (mycli *MyClient) register() {
-	mycli.eventHandlerID = mycli.WAClient.AddEventHandler(mycli.myEventHandler)
+func (mycli *MyClient) registerCommand(cmd *modules.Command) {
+	// build a command Event handler and add that to the client
+	commandEvtHandler := mycli.buildCommandEventHandler(cmd)
+	fmt.Println(cmd.Command, "commmand registered")
+
+	mycli.WAClient.AddEventHandler(commandEvtHandler)
 }
 
 var allowedUsers []string = []string{
@@ -33,13 +37,31 @@ var allowedUsers []string = []string{
 	// ^ Input format
 }
 
-func (mycli *MyClient) myEventHandler(evt interface{}) {
-	// Handle event and access mycli.WAClient
-	switch v := evt.(type) {
-	case *events.Message:
-		isAllowed := utils.Contains(allowedUsers, v.Info.Sender.User)
-		if v.Info.IsFromMe || isAllowed {
-			modules.CallbackExecutor(mycli.WAClient, v)
+func (mycli *MyClient) buildCommandEventHandler(cmd *modules.Command) whatsmeow.EventHandler {
+	return func(evt interface{}) {
+		// Handle event and access mycli.WAClient
+		switch v := evt.(type) {
+		case *events.Message:
+			isAllowed := utils.Contains(allowedUsers, v.Info.Sender.User)
+			if v.Info.IsFromMe || isAllowed {
+				// get the command
+				msg_text := utils.GetText(v)
+				if msg_text == nil {
+					// return if no text
+					return
+				}
+				cmd_string := strings.Fields(*msg_text)
+				if len(cmd_string) == 0 {
+					// return if no command
+					return
+				}
+				if cmd_string[0] != cmd.Command {
+					// return if command is not the one we are looking for
+					return
+				}
+				// execute the command callback
+				go cmd.Callback(mycli.WAClient, v)
+			}
 		}
 	}
 }
@@ -59,8 +81,12 @@ func main() {
 	}
 	clientLog := waLog.Stdout("Client", "DEBUG", true)
 	client := whatsmeow.NewClient(deviceStore, clientLog)
-	customClient := MyClient{client, 0}
-	customClient.register()
+	customClient := MyClient{client}
+
+	// register all the command event handlers.
+	for i := range modules.CommandArray {
+		customClient.registerCommand(&modules.CommandArray[i])
+	}
 
 	if client.Store.ID == nil {
 		// No ID stored, new login
